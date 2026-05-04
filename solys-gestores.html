@@ -1294,6 +1294,7 @@ async function salvar(){
   _entry=entry;
   await stDel('asvdraft_'+SS.setor,false);
   document.getElementById('VAL_PANEL').innerHTML='';
+  try{ new BroadcastChannel('solys_sync').postMessage('novo_registro'); }catch(e){}
   toast('ok',sv.icon+' '+sv.nome+' salvo!',fd(data)+' · Disponível para a diretoria');
   await abrirModal(entry);
 }

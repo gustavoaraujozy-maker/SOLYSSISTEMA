@@ -1303,8 +1303,23 @@ window.addEventListener('load',async()=>{
   _metas=await stGet(SK.metas)||{};
   setSyncUI(_cloud?'cloud':'local');
   renderAll();
-  renderExecEntry(); // mostra tela executiva de entrada com alertas
+  renderExecEntry();
 });
+
+// Sync em tempo real: quando gestor salva em outra aba, atualiza diretoria automaticamente
+window.addEventListener('storage', async (e) => {
+  if (e.key && (e.key.startsWith('solys_db') || e.key === SK.metas)) {
+    await recarregar();
+  }
+});
+
+// BroadcastChannel para sync na mesma janela/contexto
+try {
+  const _bc = new BroadcastChannel('solys_sync');
+  _bc.onmessage = async (ev) => {
+    if (ev.data === 'novo_registro') await recarregar();
+  };
+} catch(e) {}
 </script>
 </body>
 </html>
