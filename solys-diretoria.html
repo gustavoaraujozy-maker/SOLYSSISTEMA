@@ -1306,20 +1306,32 @@ window.addEventListener('load',async()=>{
   renderExecEntry();
 });
 
-// Sync em tempo real: quando gestor salva em outra aba, atualiza diretoria automaticamente
+// ── Sync em tempo real ──────────────────────────────────────────
+// 1) storage event — funciona entre abas, mesmo origin
 window.addEventListener('storage', async (e) => {
-  if (e.key && (e.key === 'solys_sync_signal' || e.key.startsWith('solys_db') || e.key === SK.metas)) {
+  if (e.key && (e.key === 'solys_last_saved' || e.key === 'solys_sync_signal' ||
+      e.key.startsWith('solys_db') || e.key === SK.metas)) {
     await recarregar();
   }
 });
 
-// BroadcastChannel para sync na mesma janela/contexto
+// 2) BroadcastChannel — fallback instantâneo mesma sessão
+let _syncBc;
 try {
-  const _bc = new BroadcastChannel('solys_sync');
-  _bc.onmessage = async (ev) => {
-    if (ev.data === 'novo_registro') await recarregar();
-  };
+  _syncBc = new BroadcastChannel('solys_sync');
+  _syncBc.onmessage = async () => { await recarregar(); };
 } catch(e) {}
+
+// 3) Polling a cada 4s — garante sync em qualquer contexto (cloud, file://, etc.)
+let _lastSavedSeen = localStorage.getItem('solys_last_saved') || '';
+setInterval(async () => {
+  // Tenta ler direto do localStorage (funciona mesmo em modo cloud, pois gestores sempre grava lá)
+  const cur = localStorage.getItem('solys_last_saved') || '';
+  if (cur && cur !== _lastSavedSeen) {
+    _lastSavedSeen = cur;
+    await recarregar();
+  }
+}, 4000);
 </script>
 </body>
 </html>

@@ -1297,6 +1297,8 @@ async function salvar(){
   _entry=entry;
   await stDel('asvdraft_'+SS.setor,false);
   document.getElementById('VAL_PANEL').innerHTML='';
+  // Marca timestamp sempre no localStorage para notificar diretoria em qualquer contexto
+  localStorage.setItem('solys_last_saved', String(entry.id));
   if(_bc) _bc.postMessage('novo_registro');
   toast('ok',sv.icon+' '+sv.nome+' salvo!',fd(data)+' · Disponível para a diretoria');
   await abrirModal(entry);
