@@ -397,6 +397,7 @@ const COLABS_DEFAULT = {
 };
 let _colabs = {}; // carregado do storage
 let _useCloud = false;
+let _bc; try{ _bc = new BroadcastChannel('solys_sync'); }catch(e){}
 
 async function stInit(){
   try{
@@ -423,7 +424,9 @@ async function stSet(key, val, shared=true){
   const s=JSON.stringify(val);
   setSyncUI('syncing');
   try{
-    if(_useCloud){ await window.storage.set(key,s,shared); setSyncUI('cloud'); return; }
+    if(_useCloud){ await window.storage.set(key,s,shared); setSyncUI('cloud');
+      localStorage.setItem('solys_sync_signal', Date.now()+':'+key);
+      return; }
   }catch(e){ setSyncUI('err'); }
   localStorage.setItem(key,s); setSyncUI('local');
 }
@@ -1294,7 +1297,7 @@ async function salvar(){
   _entry=entry;
   await stDel('asvdraft_'+SS.setor,false);
   document.getElementById('VAL_PANEL').innerHTML='';
-  try{ new BroadcastChannel('solys_sync').postMessage('novo_registro'); }catch(e){}
+  if(_bc) _bc.postMessage('novo_registro');
   toast('ok',sv.icon+' '+sv.nome+' salvo!',fd(data)+' · Disponível para a diretoria');
   await abrirModal(entry);
 }

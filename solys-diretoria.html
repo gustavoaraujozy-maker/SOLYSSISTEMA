@@ -1308,7 +1308,7 @@ window.addEventListener('load',async()=>{
 
 // Sync em tempo real: quando gestor salva em outra aba, atualiza diretoria automaticamente
 window.addEventListener('storage', async (e) => {
-  if (e.key && (e.key.startsWith('solys_db') || e.key === SK.metas)) {
+  if (e.key && (e.key === 'solys_sync_signal' || e.key.startsWith('solys_db') || e.key === SK.metas)) {
     await recarregar();
   }
 });
