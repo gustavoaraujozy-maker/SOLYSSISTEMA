@@ -375,20 +375,29 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0}
 <script>
 // ══ STORAGE ══
 const SK={db:'solys_db_v5',metas:'solys_metas_v1'};
+const FB='https://solys-sistema-default-rtdb.firebaseio.com/solys';
 let _cloud=false;
 
 async function stInit(){
-  try{ if(window.storage){await window.storage.set('__test__','1',true);_cloud=true;setSyncUI('cloud');} }
-  catch(e){_cloud=false;setSyncUI('local');}
+  try{
+    const r=await fetch(`${FB}/__ping.json`);
+    if(r.ok){_cloud=true;setSyncUI('cloud');}
+  }catch(e){_cloud=false;setSyncUI('local');}
 }
 async function stGet(k,sh=true){
-  try{if(_cloud){const r=await window.storage.get(k,sh);return r?JSON.parse(r.value):null;}}catch(e){}
+  if(_cloud&&sh){
+    try{const r=await fetch(`${FB}/${k}.json`);if(r.ok)return await r.json();}catch(e){}
+  }
   try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}
 }
 async function stSet(k,v,sh=true){
-  const s=JSON.stringify(v);
-  try{if(_cloud){await window.storage.set(k,s,sh);return;}}catch(e){}
-  localStorage.setItem(k,s);
+  if(_cloud&&sh){
+    try{
+      const r=await fetch(`${FB}/${k}.json`,{method:'PUT',body:JSON.stringify(v),headers:{'Content-Type':'application/json'}});
+      if(r.ok)return;
+    }catch(e){}
+  }
+  localStorage.setItem(k,JSON.stringify(v));
 }
 function setSyncUI(s){
   const m={cloud:{cls:'cloud',t:'☁ Ao vivo'},syncing:{cls:'syncing',t:'↻ Carregando'},local:{cls:'local',t:'💾 Local'}};
@@ -1304,34 +1313,30 @@ window.addEventListener('load',async()=>{
   setSyncUI(_cloud?'cloud':'local');
   renderAll();
   renderExecEntry();
+  startFBSync();
 });
 
 // ── Sync em tempo real ──────────────────────────────────────────
-// 1) storage event — funciona entre abas, mesmo origin
+// 1) Firebase SSE — notificação instantânea entre dispositivos diferentes
+let _fbSyncReady = false;
+function startFBSync(){
+  try{
+    const es = new EventSource('https://solys-sistema-default-rtdb.firebaseio.com/solys/solys_last_saved.json');
+    es.addEventListener('put', async (e)=>{
+      if(!_fbSyncReady){ _fbSyncReady=true; return; } // ignora evento inicial
+      await recarregar();
+    });
+    es.onerror = ()=>{ es.close(); setTimeout(startFBSync, 10000); };
+  }catch(e){}
+}
+
+// 2) storage event — mesma máquina, abas diferentes
 window.addEventListener('storage', async (e) => {
-  if (e.key && (e.key === 'solys_last_saved' || e.key === 'solys_sync_signal' ||
-      e.key.startsWith('solys_db') || e.key === SK.metas)) {
-    await recarregar();
-  }
+  if(e.key === 'solys_last_saved') await recarregar();
 });
 
-// 2) BroadcastChannel — fallback instantâneo mesma sessão
-let _syncBc;
-try {
-  _syncBc = new BroadcastChannel('solys_sync');
-  _syncBc.onmessage = async () => { await recarregar(); };
-} catch(e) {}
-
-// 3) Polling a cada 4s — garante sync em qualquer contexto (cloud, file://, etc.)
-let _lastSavedSeen = localStorage.getItem('solys_last_saved') || '';
-setInterval(async () => {
-  // Tenta ler direto do localStorage (funciona mesmo em modo cloud, pois gestores sempre grava lá)
-  const cur = localStorage.getItem('solys_last_saved') || '';
-  if (cur && cur !== _lastSavedSeen) {
-    _lastSavedSeen = cur;
-    await recarregar();
-  }
-}, 4000);
+// 3) BroadcastChannel — mesma sessão
+let _syncBc; try{ _syncBc=new BroadcastChannel('solys_sync'); _syncBc.onmessage=async()=>await recarregar(); }catch(e){}
 </script>
 </body>
 </html>

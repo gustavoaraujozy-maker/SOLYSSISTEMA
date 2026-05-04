@@ -379,9 +379,10 @@ body{font-family:var(--f);background:var(--bg);color:var(--tp);font-size:14px;li
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// STORAGE — window.storage (Claude persistent) + localStorage fallback
+// STORAGE — Firebase Realtime Database + localStorage fallback
 // ═══════════════════════════════════════════════════════════════
 const SK = {db:'solys_db_v5', nomes:'solys_nomes_v2', metas:'solys_metas_v1', colabs:'solys_colabs_v1'};
+const FB = 'https://solys-sistema-default-rtdb.firebaseio.com/solys';
 
 // Colaboradores por setor — editável via botão na tela de login
 const COLABS_DEFAULT = {
@@ -395,43 +396,53 @@ const COLABS_DEFAULT = {
   rh:           ['Claudia Pereira','Marcio Silva'],
   juridico:     ['Renata Castro','Vitor Hugo'],
 };
-let _colabs = {}; // carregado do storage
-let _useCloud = false;
+let _colabs = {};
+let _fbOk = false;
 let _bc; try{ _bc = new BroadcastChannel('solys_sync'); }catch(e){}
 
 async function stInit(){
   try{
-    if(window.storage){
-      await window.storage.set('__test__','1',true);
-      _useCloud = true; setSyncUI('cloud');
-      // Login screen: show cloud message
+    const r = await fetch(`${FB}/__ping.json`, {
+      method:'PUT', body:'"ok"',
+      headers:{'Content-Type':'application/json'}
+    });
+    if(r.ok){
+      _fbOk = true; setSyncUI('cloud');
       const w=document.getElementById('SYNC_WARN');
-      if(w) w.innerHTML='☁ <div><strong>Sincronização ativa</strong> — os dados ficam disponíveis para a diretoria em qualquer dispositivo imediatamente após salvar.</div>';
-    }
+      if(w) w.innerHTML='☁ <div><strong>Sincronização ativa</strong> — dados disponíveis para a diretoria em qualquer dispositivo, em tempo real.</div>';
+    } else throw new Error();
   } catch(e){
-    _useCloud=false; setSyncUI('local');
+    _fbOk = false; setSyncUI('local');
     const w=document.getElementById('SYNC_WARN');
-    if(w){ w.className='al al-wa'; w.innerHTML='💾 <div><strong>Modo local</strong> — dados salvos apenas neste navegador. Para sincronização completa, acesse pelo Claude.ai.</div>'; }
+    if(w){ w.className='al al-wa'; w.innerHTML='💾 <div><strong>Modo local</strong> — sem conexão com Firebase. Dados salvos apenas neste navegador.</div>'; }
   }
 }
 async function stGet(key, shared=true){
-  try{
-    if(_useCloud){ const r=await window.storage.get(key,shared); return r?JSON.parse(r.value):null; }
-  }catch(e){}
+  if(_fbOk && shared){
+    try{
+      const r = await fetch(`${FB}/${key}.json`);
+      if(r.ok) return await r.json();
+    }catch(e){}
+  }
   try{ return JSON.parse(localStorage.getItem(key)); }catch(e){ return null; }
 }
 async function stSet(key, val, shared=true){
-  const s=JSON.stringify(val);
   setSyncUI('syncing');
-  try{
-    if(_useCloud){ await window.storage.set(key,s,shared); setSyncUI('cloud');
-      localStorage.setItem('solys_sync_signal', Date.now()+':'+key);
-      return; }
-  }catch(e){ setSyncUI('err'); }
-  localStorage.setItem(key,s); setSyncUI('local');
+  if(_fbOk && shared){
+    try{
+      const r = await fetch(`${FB}/${key}.json`,{
+        method:'PUT', body:JSON.stringify(val),
+        headers:{'Content-Type':'application/json'}
+      });
+      if(r.ok){ setSyncUI('cloud'); return; }
+    }catch(e){ setSyncUI('err'); }
+  }
+  localStorage.setItem(key, JSON.stringify(val)); setSyncUI('local');
 }
 async function stDel(key, shared=true){
-  try{ if(_useCloud){ await window.storage.delete(key,shared); return; } }catch(e){}
+  if(_fbOk && shared){
+    try{ await fetch(`${FB}/${key}.json`,{method:'DELETE'}); return; }catch(e){}
+  }
   localStorage.removeItem(key);
 }
 
@@ -1297,8 +1308,9 @@ async function salvar(){
   _entry=entry;
   await stDel('asvdraft_'+SS.setor,false);
   document.getElementById('VAL_PANEL').innerHTML='';
-  // Marca timestamp sempre no localStorage para notificar diretoria em qualquer contexto
+  // Notifica diretoria via Firebase (cross-device) + localStorage + BroadcastChannel
   localStorage.setItem('solys_last_saved', String(entry.id));
+  if(_fbOk) fetch(`${FB}/solys_last_saved.json`,{method:'PUT',body:String(entry.id),headers:{'Content-Type':'application/json'}}).catch(()=>{});
   if(_bc) _bc.postMessage('novo_registro');
   toast('ok',sv.icon+' '+sv.nome+' salvo!',fd(data)+' · Disponível para a diretoria');
   await abrirModal(entry);
