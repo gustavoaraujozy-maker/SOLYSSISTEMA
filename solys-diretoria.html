@@ -72,6 +72,44 @@ body{font-family:var(--f);background:var(--bg);color:var(--tp);font-size:14px;li
 .scard-n{font-size:12px;font-weight:600;margin-bottom:2px}
 .scard-s{font-size:10px;color:var(--tm)}
 .scard-b{margin-left:auto;flex-shrink:0}
+/* ══ STATUS SETORES — CARDS PREMIUM ══ */
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:26px}
+.sc-card{background:#fff;border:1px solid #E8EBF2;border-radius:16px;padding:18px 18px 14px;cursor:pointer;transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s cubic-bezier(.16,1,.3,1),border-color .18s;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;min-height:168px}
+.sc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 16px 16px;transition:height .22s ease}
+.sc-card.sc-ok::after{background:linear-gradient(90deg,#1E8A42,#34c76f)}
+.sc-card.sc-er::after{background:linear-gradient(90deg,#CC2222,#ff6b6b)}
+.sc-card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(16,24,40,.13);border-color:#BEC6D4}
+.sc-card:hover::after{height:4px}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.sc-icon-wrap{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.sc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.25px;flex-shrink:0}
+.sc-badge-ok{background:#EDFBF3;color:#1A6B35;border:1px solid #A8DDB8}
+.sc-badge-er{background:#FFF2F2;color:#8A1A1A;border:1px solid #F5AAAA}
+.sc-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+@keyframes sc-pulse{0%,100%{opacity:1}50%{opacity:.25}}.sc-badge-er .sc-dot{animation:sc-pulse .85s ease infinite}
+.sc-name{font-size:14px;font-weight:700;color:#13161C;line-height:1.25;margin-top:2px}
+.sc-date{font-size:11px;color:#6C7685;margin-top:-6px}
+.sc-kpis{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
+.sc-kpi{background:#F5F7FA;border-radius:9px;padding:8px 10px;border:1px solid #EEF0F4}
+.sc-kpi-val{font-size:16px;font-weight:700;font-family:var(--fm);line-height:1;color:#13161C}
+.sc-kpi-lbl{font-size:9px;font-weight:600;color:#6C7685;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid #F0F2F6;margin-top:auto}
+.sc-resp{font-size:11px;color:#4A5263;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
+.sc-time{font-size:11px;color:#6C7685;font-family:var(--fm);flex-shrink:0}
+.sc-empty-ico{font-size:22px;opacity:.4}
+.sc-nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;gap:5px;flex:1;text-align:center}
+.sc-nodata-txt{font-size:12px;font-weight:600;color:#8A1A1A}
+.sc-nodata-sub{font-size:10px;color:#6C7685;line-height:1.4}
+/* section status header */
+.sh-status{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.sh-status-left{display:flex;flex-direction:column;gap:3px}
+.sh-status-title{font-size:16px;font-weight:700;color:#13161C;display:flex;align-items:center;gap:8px}
+.sh-status-sub{font-size:12px;color:#6C7685}
+.sh-status-right{display:flex;align-items:center;gap:8px}
+.sc-counter{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;background:#fff;border:1px solid #E8EBF2;border-radius:999px;font-size:12px;font-weight:500;box-shadow:0 1px 4px rgba(16,24,40,.06);color:#4A5263}
+.sc-counter-sep{color:#DDE1EC}
+.sc-count-ok{color:#1A6B35;font-weight:700}
+.sc-count-er{color:#8A1A1A;font-weight:700}
 .hmap-row{display:grid;align-items:center;gap:2px}
 .hday{width:22px;height:22px;border-radius:4px;cursor:default;transition:transform .1s;title-attr:attr(title)}
 .hday:hover{transform:scale(1.35)}
@@ -291,11 +329,20 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0}
     </div>
   </div>
 
-  <div class="sh">
-    <div><div class="sh-ti">Status dos Setores</div><div class="sh-sub" id="STATUS_SUB">—</div></div>
-    <span class="bx bx-nt" id="STATUS_BADGE">—</span>
+  <div class="sh-status">
+    <div class="sh-status-left">
+      <div class="sh-status-title">🏢 Status dos Setores</div>
+      <div class="sh-status-sub" id="STATUS_SUB">—</div>
+    </div>
+    <div class="sh-status-right">
+      <div class="sc-counter" id="STATUS_BADGE_WRAP">
+        <span id="STATUS_BADGE_OK" class="sc-count-ok">— ✓</span>
+        <span class="sc-counter-sep">·</span>
+        <span id="STATUS_BADGE_ER" class="sc-count-er">— ✗</span>
+      </div>
+    </div>
   </div>
-  <div id="STATUS_GRID" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:9px;margin-bottom:22px"></div>
+  <div id="STATUS_GRID" class="sc-grid"></div>
 
   <!-- KPIs + TOGGLE PERÍODO -->
   <div class="sh">
@@ -500,32 +547,60 @@ function renderStatusGrid(){
   const html=SK_ARR.map(k=>{
     const sv=SETS[k]; const e=getL(k,data); const prev=getLBefore(k,data);
     if(e) ok++; else er++;
+    const iconBg=(sv.cor||'#0A3D7C')+'1A';
 
     if(!e){
-      // Mostra dados do último dia disponível como referência
-      const kpis=(sv.main||[]).slice(0,2).map(campo=>{
+      const prevKpis=(sv.main||[]).slice(0,2).map(campo=>{
         const v=nm(prev?.campos?.[campo]);
-        return v!==null?`${sv.lb[campo]||campo}: <b>${v.toLocaleString('pt-BR')}</b>`:'';
-      }).filter(Boolean).join(' · ');
-      const ultimoDia=prev?`<div style="font-size:10px;color:var(--wat);margin-top:2px">Último: ${fd(prev.data)}${kpis?' · '+kpis:''}</div>`:'<div style="font-size:10px;color:var(--er);margin-top:1px">Sem histórico</div>';
-      return `<div class="scard s-er" onclick="openDrw('${k}','${data}')">
-        <div class="scard-ic">${sv.ic}</div>
-        <div style="flex:1;min-width:0"><div class="scard-n">${sv.n}</div>${ultimoDia}</div>
-        <div class="scard-b"><span class="bx bx-er" style="font-size:10px">!</span></div>
+        return v!==null?{lbl:sv.lb[campo]||campo,val:v.toLocaleString('pt-BR')}:null;
+      }).filter(Boolean);
+      const kpisHtml=prevKpis.length
+        ?`<div class="sc-kpis">${prevKpis.map(kp=>`<div class="sc-kpi"><div class="sc-kpi-val">${kp.val}</div><div class="sc-kpi-lbl">${kp.lbl}</div></div>`).join('')}</div>`
+        :`<div class="sc-nodata"><div class="sc-empty-ico">📭</div><div class="sc-nodata-txt">Não preenchido</div><div class="sc-nodata-sub">Sem registro para hoje</div></div>`;
+      const lastDate=prev?`Último: ${fd(prev.data)}`:'Sem histórico';
+      return `<div class="sc-card sc-er" onclick="openDrw('${k}','${data}')">
+        <div class="sc-top">
+          <div class="sc-icon-wrap" style="background:${iconBg}">${sv.ic}</div>
+          <span class="sc-badge sc-badge-er"><span class="sc-dot"></span>Pendente</span>
+        </div>
+        <div class="sc-name">${sv.n}</div>
+        <div class="sc-date">${lastDate}</div>
+        ${kpisHtml}
+        <div class="sc-footer">
+          <span class="sc-resp">—</span>
+          <span class="sc-time" style="color:#CC2222;font-size:12px">✗</span>
+        </div>
       </div>`;
     }
 
-    const kpis=(sv.main||[]).slice(0,2).map(campo=>{const v=nm(e.campos?.[campo]);return v!==null?`${sv.lb[campo]||campo}: <b>${v.toLocaleString('pt-BR')}</b>`:''}).filter(Boolean).join(' · ');
+    const kpis=(sv.main||[]).slice(0,2).map(campo=>{
+      const v=nm(e.campos?.[campo]);
+      return v!==null?{lbl:sv.lb[campo]||campo,val:v.toLocaleString('pt-BR')}:null;
+    }).filter(Boolean);
+    const kpisHtml=kpis.length
+      ?`<div class="sc-kpis">${kpis.map(kp=>`<div class="sc-kpi"><div class="sc-kpi-val">${kp.val}</div><div class="sc-kpi-lbl">${kp.lbl}</div></div>`).join('')}</div>`
+      :`<div class="sc-kpis"><div class="sc-kpi"><div class="sc-kpi-val">✓</div><div class="sc-kpi-lbl">Preenchido</div></div></div>`;
     const hora=new Date(e.ts||e.id).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="scard s-ok" onclick="openDrw('${k}','${data}')">
-      <div class="scard-ic">${sv.ic}</div>
-      <div style="flex:1;min-width:0"><div class="scard-n">${sv.n}</div><div class="scard-s">${kpis||'Preenchido'}</div></div>
-      <div class="scard-b"><span class="bx bx-ok" style="font-size:10px">${hora}</span></div>
+    return `<div class="sc-card sc-ok" onclick="openDrw('${k}','${data}')">
+      <div class="sc-top">
+        <div class="sc-icon-wrap" style="background:${iconBg}">${sv.ic}</div>
+        <span class="sc-badge sc-badge-ok"><span class="sc-dot"></span>Online</span>
+      </div>
+      <div class="sc-name">${sv.n}</div>
+      <div class="sc-date">Atualizado ${fd(e.data)}</div>
+      ${kpisHtml}
+      <div class="sc-footer">
+        <span class="sc-resp">${esc(e.responsavel)}</span>
+        <span class="sc-time">${hora}</span>
+      </div>
     </div>`;
   }).join('');
 
   document.getElementById('STATUS_GRID').innerHTML=html;
-  document.getElementById('STATUS_BADGE').textContent=`${ok} ✓ · ${er} ✗`;
+  const okEl=document.getElementById('STATUS_BADGE_OK');
+  const erEl=document.getElementById('STATUS_BADGE_ER');
+  if(okEl) okEl.textContent=`${ok} ✓`;
+  if(erEl) erEl.textContent=`${er} ✗`;
   document.getElementById('STATUS_SUB').textContent=`${fd(data)} — ${ok} de ${SK_ARR.length} preenchidos`;
 }
 
